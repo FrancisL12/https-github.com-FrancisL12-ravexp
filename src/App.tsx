@@ -102,57 +102,48 @@ const App: FC = () => {
     }
   };
   
-  const renderUserContent = () => {
-    if (!isLoggedIn) return <LoginScreen onLogin={handleLogin} />;
-    
-    switch (currentPage) {
-      case 'community': return <CommunityFeedScreen onNavigate={navigateUser} />;
-      case 'createPost': return <CreatePostScreen onBack={handleBack} />;
-      case 'events': return <EventFeedScreen onSelectEvent={handleSelectEvent} />;
-      case 'eventDetail': return selectedEvent && <EventDetailScreen event={selectedEvent} onBack={handleBack} />;
-      case 'myTickets': return <MyTicketsScreen onSelectTicket={handleSelectTicket} />;
-      case 'ticketDetail': return selectedTicket && <TicketDetailScreen ticket={selectedTicket} onBack={handleBack} />;
-      case 'profile': return <ProfileScreen />;
-      default: return <CommunityFeedScreen onNavigate={navigateUser} />;
-    }
-  };
-
-  const renderProducerContent = () => {
-    if (!isLoggedIn) return <ProducerLoginScreen onLogin={handleLogin} />;
-    
-    switch (currentProducerPage) {
-        case 'dashboard': return <ProducerDashboard onNavigate={setCurrentProducerPage} onEditEvent={handleEditEvent} />;
-        case 'editEvent': return <EventEditorScreen event={editingEvent} onBack={handleBack} />;
-        case 'community': return <CommunityManagementScreen />;
-        case 'analytics': return <AnalyticsScreen />;
-        default: return <ProducerDashboard onNavigate={setCurrentProducerPage} onEditEvent={handleEditEvent} />;
-    }
-  }
-
-  const renderValidatorContent = () => {
-      if (!isLoggedIn) return <ValidatorLoginScreen onLogin={handleLogin} />;
-      
-      switch(currentValidatorPage) {
-          case 'scanner': return <ValidatorScannerScreen onLogout={handleLogout} />;
-          default: return <ValidatorScannerScreen onLogout={handleLogout} />;
-      }
-  }
-
-  const renderContent = () => {
-      if (!userRole) return <LandingScreen onSelectRole={setUserRole} />;
-      if (userRole === 'user') return renderUserContent();
-      if (userRole === 'producer') return renderProducerContent();
-      if (userRole === 'validator') return renderValidatorContent();
-      return null;
-  }
-  
   return (
     <>
       {isLoggedIn && userRole === 'producer' && (
           <ProducerNav activePage={currentProducerPage} onNavigate={setCurrentProducerPage} onLogout={handleLogout}/>
       )}
       <main className="main-content" style={{ paddingBottom: isLoggedIn && userRole === 'user' ? '80px' : '0' }}>
-        {renderContent()}
+        {(() => {
+            if (!userRole) {
+                return <LandingScreen onSelectRole={setUserRole} />;
+            }
+            if (userRole === 'user') {
+                if (!isLoggedIn) return <LoginScreen onLogin={handleLogin} />;
+                switch (currentPage) {
+                    case 'community': return <CommunityFeedScreen onNavigate={navigateUser} />;
+                    case 'createPost': return <CreatePostScreen onBack={handleBack} />;
+                    case 'events': return <EventFeedScreen onSelectEvent={handleSelectEvent} />;
+                    case 'eventDetail': return selectedEvent && <EventDetailScreen event={selectedEvent} onBack={handleBack} />;
+                    case 'myTickets': return <MyTicketsScreen onSelectTicket={handleSelectTicket} />;
+                    case 'ticketDetail': return selectedTicket && <TicketDetailScreen ticket={selectedTicket} onBack={handleBack} />;
+                    case 'profile': return <ProfileScreen />;
+                    default: return <CommunityFeedScreen onNavigate={navigateUser} />;
+                }
+            }
+            if (userRole === 'producer') {
+                if (!isLoggedIn) return <ProducerLoginScreen onLogin={handleLogin} />;
+                switch (currentProducerPage) {
+                    case 'dashboard': return <ProducerDashboard onNavigate={setCurrentProducerPage} onEditEvent={handleEditEvent} />;
+                    case 'editEvent': return <EventEditorScreen event={editingEvent} onBack={handleBack} />;
+                    case 'community': return <CommunityManagementScreen />;
+                    case 'analytics': return <AnalyticsScreen />;
+                    default: return <ProducerDashboard onNavigate={setCurrentProducerPage} onEditEvent={handleEditEvent} />;
+                }
+            }
+            if (userRole === 'validator') {
+                 if (!isLoggedIn) return <ValidatorLoginScreen onLogin={handleLogin} />;
+                switch(currentValidatorPage) {
+                    case 'scanner': return <ValidatorScannerScreen onLogout={handleLogout} />;
+                    default: return <ValidatorScannerScreen onLogout={handleLogout} />;
+                }
+            }
+            return null;
+        })()}
       </main>
       {isLoggedIn && userRole === 'user' && (
         <UserNav activeNav={activeNav} onNavigate={navigateUser} />

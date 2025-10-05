@@ -24,29 +24,35 @@ export const ValidatorScannerScreen: FC<{ onLogout: () => void }> = ({ onLogout 
     const [scanResult, setScanResult] = useState<'valid' | 'invalid' | null>(null);
     const [scannedData, setScannedData] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(true);
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+    const [cameraError, setCameraError] = useState<string | null>(null);
 
     useEffect(() => {
-        const startCamera = async () => {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                    }
-                } catch (error) {
-                    console.error("Erro ao acessar a câmera: ", error);
-                }
-            }
-        };
-        startCamera();
-
+        // Cleanup function to stop camera stream when component unmounts
         return () => {
-            if (videoRef.current && videoRef.current.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [cameraStream]);
+
+    const startCamera = async () => {
+        setCameraError(null);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+                setCameraStream(stream);
+            } catch (error) {
+                console.error("Erro ao acessar a câmera: ", error);
+                setCameraError("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
+            }
+        } else {
+            setCameraError("Seu navegador não suporta acesso à câmera.");
+        }
+    };
 
     const handleMockScan = () => {
         if (!isScanning) return;
@@ -84,10 +90,24 @@ export const ValidatorScannerScreen: FC<{ onLogout: () => void }> = ({ onLogout 
             </div>
             <div className="camera-container">
                 <video ref={videoRef} autoPlay playsInline className="camera-feed" aria-label="Visualização da câmera"></video>
-                <div className="scanner-overlay" aria-hidden="true">
-                    <div className="scanner-box"></div>
-                    <p>Aponte a câmera para o QR Code</p>
-                </div>
+                
+                {!cameraStream && (
+                    <div className="camera-placeholder">
+                        {cameraError ? (
+                            <p className="error-text">{cameraError}</p>
+                        ) : (
+                            <p>Aponte a câmera para o QR Code para validar o ingresso.</p>
+                        )}
+                        <button className="btn btn-primary" onClick={startCamera}>Ativar Câmera</button>
+                    </div>
+                )}
+                
+                {cameraStream && (
+                    <div className="scanner-overlay" aria-hidden="true">
+                        <div className="scanner-box"></div>
+                        <p>Aponte a câmera para o QR Code</p>
+                    </div>
+                )}
 
                 {scanResult && (
                     <div className={`scan-result-overlay ${scanResult}`} role="alert">
@@ -98,10 +118,12 @@ export const ValidatorScannerScreen: FC<{ onLogout: () => void }> = ({ onLogout 
                 )}
             </div>
             <div className="scanner-controls">
-                {isScanning ? (
-                     <button className="btn btn-primary" onClick={handleMockScan}>Simular Leitura</button>
-                ) : (
-                    <button className="btn btn-secondary" onClick={resetScanner}>Ler Próximo Ingresso</button>
+                {cameraStream && (
+                    isScanning ? (
+                        <button className="btn btn-primary" onClick={handleMockScan}>Simular Leitura</button>
+                    ) : (
+                        <button className="btn btn-secondary" onClick={resetScanner}>Ler Próximo Ingresso</button>
+                    )
                 )}
             </div>
         </div>

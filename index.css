@@ -778,3 +778,33 @@ body {
 .scanner-controls .btn-secondary {
     margin-top: 0;
 }
+
+/* Camera Placeholder Styles */
+.camera-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    padding: 24px;
+    background-color: var(--primary-dark);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 15;
+}
+.camera-placeholder p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 80%;
+}
+.camera-placeholder .btn-primary {
+    width: auto;
+    padding: 14px 28px;
+}
+.error-text {
+    color: var(--error-color);
+    font-weight: 600;
+}
